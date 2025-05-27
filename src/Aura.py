@@ -6,8 +6,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
-client = OpenAI()
-
+client = OpenAI(api_key=os.getenv("API_KEY"))
 conversation_history = [
     {"role": "system", "content": "You are a concise assistant. Respond in 1-2 lines (max 10 words) unless the user asks for details."}
 ]
