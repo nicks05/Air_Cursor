@@ -10,7 +10,7 @@ pyautogui==0.9.53
 comtypes==1.1.14
 pycaw==20181226
 screen_brightness_control==0.14.0
-protobuf==4.23.4
+protobuf>=4.23.3,<5
 numpy==1.24.3
 flask==2.3.3
 flask-cors==4.0.0
