@@ -142,8 +142,9 @@ def respond(voice_data):
         if 'wake up' in voice_data:
             is_awake = True
             wish()
+        return
 
-    elif 'hello' in voice_data:
+    if 'hello' in voice_data:
         wish()
 
     elif 'what is your name' in voice_data:
@@ -184,16 +185,19 @@ def respond(voice_data):
             keyboard.press('c')
             keyboard.release('c')
         reply('Copied')
+
     elif 'undo' in voice_data and keyboard:
         with keyboard.pressed(Key.ctrl):
             keyboard.press('z')
             keyboard.release('z')
         reply('Reversed the changes')
+
     elif ('paste' in voice_data or 'pest' in voice_data or 'page' in voice_data) and keyboard:
         with keyboard.pressed(Key.ctrl):
             keyboard.press('v')
             keyboard.release('v')
         reply('Pasted')
+
     elif ('copy' in voice_data or 'undo' in voice_data or 'paste' in voice_data) and not keyboard:
         reply("Keyboard control not supported on this platform.")
 
@@ -265,6 +269,7 @@ def respond(voice_data):
         else:
             gc = Gesture_Controller.GestureController()
             t = Thread(target=gc.start)
+            t.daemon = True
             t.start()
             reply('Launched Successfully')
 
@@ -289,19 +294,21 @@ def respond(voice_data):
 
 # --- Main Driver ---
 t1 = Thread(target=app.ChatBot.start)
+t1.daemon = True
 t1.start()
 
 while not app.ChatBot.started:
     time.sleep(0.5)
 
 wish()
+
 while True:
     if app.ChatBot.isUserInput():
         voice_data = app.ChatBot.popUserInput()
     else:
         voice_data = record_audio()
 
-    if 'aura' in voice_data:
+    if voice_data and 'aura' in voice_data:
         try:
             respond(voice_data)
         except SystemExit:
