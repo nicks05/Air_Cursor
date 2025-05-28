@@ -12,6 +12,50 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from google.protobuf.json_format import MessageToDict
 import screen_brightness_control as sbcontrol
 
+
+import os
+
+# Flag to check if GUI environment is available
+has_display = 'DISPLAY' in os.environ
+
+if has_display:
+    import pyautogui
+    import cv2
+    import mediapipe as mp
+    import time
+    import numpy as np
+else:
+    pyautogui = None
+    print("[Gesture_Controller] DISPLAY not found. Gesture control disabled.")
+
+class GestureController:
+    gc_mode = 0
+
+    def __init__(self):
+        if not has_display:
+            print("GestureController disabled due to missing DISPLAY.")
+            return
+        # Initialize actual gesture control components only if GUI exists
+        self.cap = cv2.VideoCapture(0)
+        self.hands = mp.solutions.hands.Hands()
+        self.prev_time = time.time()
+
+    def start(self):
+        if not has_display:
+            print("Gesture recognition cannot start (no DISPLAY).")
+            return
+        GestureController.gc_mode = 1
+        print("Gesture recognition started")
+        while GestureController.gc_mode and self.cap.isOpened():
+            ret, frame = self.cap.read()
+            if not ret:
+                break
+            # Processing (you can leave this part as-is)
+            time.sleep(0.05)
+        self.cap.release()
+        print("Gesture recognition stopped")
+
+
 pyautogui.FAILSAFE = False
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
