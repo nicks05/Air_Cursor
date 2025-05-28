@@ -13,7 +13,6 @@ import datetime
 from threading import Thread
 import urllib.parse
 import app
-import Gesture_Controller
 
 load_dotenv()
 
@@ -22,30 +21,6 @@ client = OpenAI()
 conversation_history = [
     {"role": "system", "content": "You are a concise assistant. Respond in 1-2 lines (max 10 words) unless the user asks for details."}
 ]
-
-try:
-    import Gesture_Controller
-except Exception as e:
-    print("Gesture_Controller import failed:", e)
-    Gesture_Controller = None
-
-
-def get_conversational_response(user_input):
-    conversation_history.append({"role": "user", "content": user_input})
-    try:
-        completion = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=conversation_history,
-            max_tokens=30,
-            temperature=0.7,
-            store=True
-        )
-        assistant_reply = completion.choices[0].message.content.strip()
-        conversation_history.append({"role": "assistant", "content": assistant_reply})
-        return assistant_reply
-    except Exception as e:
-        print("ChatGPT API Error:", e)
-        return "I'm sorry, I couldn't process that."
 
 # Voice engine
 engine = pyttsx3.init()
@@ -57,7 +32,7 @@ engine.setProperty('volume', 0.7)
 # Recognizer
 r = sr.Recognizer()
 with sr.Microphone() as source:
-    r.energy_threshold = 500 
+    r.energy_threshold = 500
     r.dynamic_energy_threshold = False
 
 # OS-safe keyboard controller
@@ -97,6 +72,23 @@ def wish():
     else:
         reply("Good Evening!")
     reply("I am Aura, how may I help you?")
+
+def get_conversational_response(user_input):
+    conversation_history.append({"role": "user", "content": user_input})
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=conversation_history,
+            max_tokens=30,
+            temperature=0.7,
+            store=True
+        )
+        assistant_reply = completion.choices[0].message.content.strip()
+        conversation_history.append({"role": "assistant", "content": assistant_reply})
+        return assistant_reply
+    except Exception as e:
+        print("ChatGPT API Error:", e)
+        return "I'm sorry, I couldn't process that."
 
 def record_audio():
     with sr.Microphone() as source:
@@ -271,25 +263,32 @@ def respond(voice_data):
             reply("Please specify the contact name.")
 
     elif 'launch gesture recognition' in voice_data:
-        if Gesture_Controller is None or Gesture_Controller.pyautogui is None:
-            reply("Gesture recognition is not supported in this environment.")
-        elif Gesture_Controller.GestureController.gc_mode:
-            reply('Gesture recognition is already active')
-        else:
-            gc = Gesture_Controller.GestureController()
-            t = Thread(target=gc.start)
-            t.start()
-            reply('Launched Successfully')
+        try:
+            from Gesture_Controller import has_display, GestureController
+            if not has_display:
+                reply("Gesture recognition is not supported in this environment.")
+            elif GestureController.gc_mode:
+                reply("Gesture recognition is already active.")
+            else:
+                gc = GestureController()
+                t = Thread(target=gc.start)
+                t.start()
+                reply("Launched Successfully.")
+        except Exception as e:
+            print("Error launching gesture recognition:", e)
+            reply("Failed to launch gesture recognition.")
 
     elif 'stop gesture recognition' in voice_data:
-        if Gesture_Controller is None or Gesture_Controller.pyautogui is None:
-            reply("Gesture recognition is not supported in this environment.")
-        elif Gesture_Controller.GestureController.gc_mode:
-            Gesture_Controller.GestureController.gc_mode = 0
-            reply('Gesture recognition stopped')
-        else:
-            reply('Gesture recognition is already inactive')
-
+        try:
+            from Gesture_Controller import GestureController
+            if GestureController.gc_mode:
+                GestureController.gc_mode = 0
+                reply("Gesture recognition stopped.")
+            else:
+                reply("Gesture recognition is already inactive.")
+        except Exception as e:
+            print("Error stopping gesture recognition:", e)
+            reply("Failed to stop gesture recognition.")
 
     elif 'bye' in voice_data or 'sleep' in voice_data:
         reply("Good bye! Have a nice day.")
