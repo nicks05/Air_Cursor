@@ -23,6 +23,13 @@ conversation_history = [
     {"role": "system", "content": "You are a concise assistant. Respond in 1-2 lines (max 10 words) unless the user asks for details."}
 ]
 
+try:
+    import Gesture_Controller
+except Exception as e:
+    print("Gesture_Controller import failed:", e)
+    Gesture_Controller = None
+
+
 def get_conversational_response(user_input):
     conversation_history.append({"role": "user", "content": user_input})
     try:
@@ -264,21 +271,25 @@ def respond(voice_data):
             reply("Please specify the contact name.")
 
     elif 'launch gesture recognition' in voice_data:
-        if Gesture_Controller.GestureController.gc_mode:
+        if Gesture_Controller is None or Gesture_Controller.pyautogui is None:
+            reply("Gesture recognition is not supported in this environment.")
+        elif Gesture_Controller.GestureController.gc_mode:
             reply('Gesture recognition is already active')
         else:
             gc = Gesture_Controller.GestureController()
             t = Thread(target=gc.start)
-            t.daemon = True
             t.start()
             reply('Launched Successfully')
 
     elif 'stop gesture recognition' in voice_data:
-        if Gesture_Controller.GestureController.gc_mode:
+        if Gesture_Controller is None or Gesture_Controller.pyautogui is None:
+            reply("Gesture recognition is not supported in this environment.")
+        elif Gesture_Controller.GestureController.gc_mode:
             Gesture_Controller.GestureController.gc_mode = 0
             reply('Gesture recognition stopped')
         else:
             reply('Gesture recognition is already inactive')
+
 
     elif 'bye' in voice_data or 'sleep' in voice_data:
         reply("Good bye! Have a nice day.")
